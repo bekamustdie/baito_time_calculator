@@ -22,7 +22,7 @@ class UserResource extends JsonResource
             "email"=>$this->email,
             "avatar_url"=>$this->avatar_url,
             "role"=>$this->role,
-            "registered_date_time"=> $this->created_at
+            // "registered_date_time"=> $this->created_at
         ];
     }
 }

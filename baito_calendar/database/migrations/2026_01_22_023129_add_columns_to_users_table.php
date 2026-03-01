@@ -11,7 +11,7 @@ return new class extends Migration
             Schema::table('users', function (Blueprint $table) {
                 $table->string("surname");
                 $table->string("username");
-                $table->string("avatar_url");
+                $table->string("avatar_url")->default(null);
                 $table->enum("role", ["user", "admin"])->default("user");
             });
     }

@@ -9,8 +9,7 @@ class UsersService{
 		return $query->get();
 	}
 	
-	public function createUser($query,array $data) {
-		dd($data);
-		// $exists = $query->where()
+	public function createUser(array $data) {
+		return User::create($data);
 	}
 }

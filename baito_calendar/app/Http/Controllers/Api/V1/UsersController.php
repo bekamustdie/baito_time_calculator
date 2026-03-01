@@ -7,26 +7,28 @@ use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Services\UsersService;
+use App\Http\Requests\StoreUserRequest;
 
 class UsersController extends Controller
 {
     
-    public function __construct( private UsersService $usersService){}
+    public function __construct(private UsersService $usersService){}
 
     public function index(Request $request)
     {
         $query = User::query();
         $users = $this->usersService->getAllUsers($query, $request);
-        return  UserResource::collection($users);
+        return UserResource::collection($users);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $query = User::query();
-        $users = $this->usersService->createUser($query, $request->validated());
+        $user = $this->usersService->createUser($request->validated());
+        
+        return new UserResource($user);
     }
 
     /**
