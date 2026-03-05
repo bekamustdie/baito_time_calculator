@@ -40,7 +40,7 @@ class BaitoController extends Controller
      * Display the specified resource.
      */
     public function show(Baito $baito)
-    {
+    { 
         Gate::authorize('view', $baito);
         return response()->json(new BaitoResource($baito));
     }
