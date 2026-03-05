@@ -8,6 +8,7 @@ use App\Http\Resources\BaitoResource;
 use App\Services\BaitosService;
 use App\Models\Baito;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 
@@ -19,11 +20,10 @@ class BaitoController extends Controller
 
     public function __construct(private BaitosService  $baitosService){}
 
-    public function index(User $user)
+    public function index(Request $request)
     {
-        $data = $user->baito()->get();
-        // $all_baito = $this->baitosService->getAllBaitos($query, $request);
-        return BaitoResource::collection($data);
+        $baitos = $request->user()->baito;
+        return BaitoResource::collection($baitos);
     }
 
     /**
@@ -39,9 +39,10 @@ class BaitoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(BaitoController $baito)
+    public function show(Baito $baito)
     {
-        
+        Gate::authorize('view', $baito);
+        return response()->json(new BaitoResource($baito));
     }
 
     /**
@@ -57,8 +58,10 @@ class BaitoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Baito $baito)
     {
-        //
+        Gate::authorize('delete', $baito);
+        $baito->delete();
+        return response()->noContent(204);
     }
 }
