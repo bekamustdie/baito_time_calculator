@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
@@ -11,12 +11,18 @@ use App\Models\User;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
 
-class AuthController extends Controller
+final class AuthController extends ApiController
 {
     public function register(RegisterRequest $request){
         $data = $request->validated();
-        User::create($data);
-        return response()->json($data);
+        $user = User::create($data);
+        $user->sendEmailVerificationNotification();
+        $token = $user->createToken('auth-token')->plainTextToken;
+        return $this->created([
+            'user' => new UserResource($user),
+            'token' => $token,
+
+        ], 'User created successfully. Please check your email to verify your account.');
     }
 
     public function login(LoginRequest $request){

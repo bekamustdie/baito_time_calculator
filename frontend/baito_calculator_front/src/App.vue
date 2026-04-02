@@ -1,11 +1,14 @@
 <script setup></script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div class="min-h-screen bg-gray-100">
+    <div class="container mx-auto p-4">
+      <h1 class="text-4xl text-blue-600">
+        Tailwind Works! 🎉
+      </h1>
+      <RouterView />
+    </div>
+  </div>
 </template>
 
 <style scoped></style>

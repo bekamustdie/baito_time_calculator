@@ -8,6 +8,7 @@ use App\Http\Resources\BaitoResource;
 use App\Services\BaitosService;
 use App\Models\Baito;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -64,4 +65,11 @@ class BaitoController extends Controller
         $baito->delete();
         return response()->noContent(204);
     }
+
+    public function getByMonth($year, $month){
+        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+    }
+
+
 }
