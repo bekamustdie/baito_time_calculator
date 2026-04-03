@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\VerifyEmailRequest;
+use App\Http\Requests\ResendVerificationEmail;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 final class AuthController extends ApiController
 {
@@ -21,7 +26,6 @@ final class AuthController extends ApiController
         return $this->created([
             'user' => new UserResource($user),
             'token' => $token,
-
         ], 'User created successfully. Please check your email to verify your account.');
     }
 
@@ -46,5 +50,36 @@ final class AuthController extends ApiController
         $user = $request->user();
         $user->currentAccessToken()->delete();
         return response()->noContent();
+    }
+
+    public function verifyEmail(VerifyEmailRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()){
+            return $this->success(message: 'Email already verified');
+        }
+
+        if ($user->markEmailAsVerified()){
+            event(new Verified($user));
+        }
+
+        return $this->success(message: 'Email verified successfully');
+    }
+
+    public function resendVerificationEmail(ResendVerificationEmail $request): JsonResponse
+    {
+        $user = User::query()->where('email', $request->email)->first();
+        
+        if(!$user){
+            return $this->notFound('User not found');
+        }
+
+        if($user->hasVerifiedEmail()){
+            return $this->error('Email already verified', 400);
+        }
+
+        $user->sendEmailVerificationNotification();
+
     }
 }
