@@ -18,6 +18,13 @@ trait ApiResponse
         ], $code);
     }
 
+    public function created(
+        mixed $data = null,
+        string $message = 'Resource created successfully',   
+    ): JsonResponse{
+        return $this->success($data, $message , Response::HTTP_CREATED);
+    }
+
     protected function error(
         string $message = 'Error',
         int $code = Response::HTTP_BAD_REQUEST,

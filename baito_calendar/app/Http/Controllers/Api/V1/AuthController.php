@@ -5,16 +5,21 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Requests\ResendVerificationEmail;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\JsonResponse;
+
 
 final class AuthController extends ApiController
 {
@@ -37,11 +42,7 @@ final class AuthController extends ApiController
                 'email'=>['The provided credentials are incorrect.'],
             ]);
         }
-        // if (!$user->email_verified_at){
-        //     throw ValidationException::withMessages([
-        //         'email'=>'Please validate your email first'
-        //     ]);
-        // }
+
         $token = $user->createToken('web')->plainTextToken;
         return response()->json(['message'=>'Login successful', 'user'=> new UserResource($user), 'token'=>$token]);
     }
@@ -81,5 +82,43 @@ final class AuthController extends ApiController
 
         $user->sendEmailVerificationNotification();
 
+        return $this->success(message: 'Verification email sent successfully');
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request){
+
+        $status = Password::sendResetLink($request->only('email'));
+        if($status === Password::RESET_LINK_SENT){
+            return $this->success(message: 'Password reset link sent to your email');
+        }
+        return $this->error('Unable to send reset link', 500);
+
+    }
+
+    public function resetPassword(ResetPasswordRequest $request):JsonResponse
+    {
+        // process of reseting password accepts user info(email, password, password_confirmation , token) and callback(anonymous function that works if info is ok) function 
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password):void{
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                ])->save();
+                $user->tokens()->delete();
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET){
+            return $this->success(message: 'Password reset successfully');
+        }
+        return $this->error(
+            match($status){
+                Password::INVALID_TOKEN=> 'Invalid or expired token',
+                Password::INVALID_USER=>'User not found',
+                default =>'Unable to reset password',
+            },
+            400
+        );
     }
 }

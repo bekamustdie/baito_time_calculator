@@ -8,15 +8,16 @@ use App\Http\Controllers\Api\V1\BaitoController;
 use App\Http\Controllers\Api\V1\AuthController;
 
 
-
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/email/verify', function () {
-    return response()->json([
-        'message'=>'Please verify your email'
-    ], 403)->middleware('auth')->name('verification.notice');
-    });
 Route::prefix('v1')->group(function(){
+    //public
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/email/verify', function () {
+        return response()->json([
+            'message'=>'Please verify your email'
+        ], 403)->middleware('auth')->name('verification.notice');
+        });
+
     Route::middleware('auth:sanctum')->group(function(){
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::apiResource('users', UsersController::class);
